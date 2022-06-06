@@ -27,7 +27,6 @@ export const loadBoardFB = () => {
 
 export const addBoardFB = newBoard => {
   return async function (dispatch) {
-    console.log(222);
     newBoard = { ...newBoard, author: 'user3', like: 0 };
     const docRef = await addDoc(collection(db, 'board'), newBoard);
     const boardData = { id: docRef.id, ...newBoard };
@@ -59,7 +58,7 @@ export default function reducer(state = { list: initialValue }, action = {}) {
       return { list: action.board };
     }
     case 'board/CREATE': {
-      return { list: [action.board, ...state.list] };
+      // return { list: [action.board, ...state.list] };
     }
     case 'board/UPDATE': {
       console.log(action.targetId);
