@@ -1,14 +1,13 @@
-import { loadBoardFB } from '../redux/modules/board';
+import { loadBoardFB, removeBoardFB } from '../redux/modules/board';
 import { useSelector, useDispatch } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/firebase';
-import { faEllipsis, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import Header from './common/Header';
 import styled from 'styled-components';
-import { removeBoardFB } from '../redux/modules/board';
 
 const Main = () => {
   const dispatch = useDispatch();
@@ -16,10 +15,12 @@ const Main = () => {
   const boards = useSelector(state => state.board.list);
 
   const [isLogin, setIsLogin] = useState(false);
+  const [userId, setUserId] = useState('');
 
   const loginCheck = async user => {
     if (user) {
       setIsLogin(true);
+      setUserId(user.email);
     } else {
       setIsLogin(false);
     }
@@ -39,21 +40,58 @@ const Main = () => {
   // store에 값이 존재하면 게시물 출력
   if (boards.length > 0) {
     boardList = boards.map(board => (
-      <div key={board.id} style={{ width: 200, height: 150, backgroundColor: 'violet', marginBottom: 10 }}>
+      <Board key={board.id}>
         <BoradHeader>
+          <span style={{ display: 'inline-block', fontSize: 20, marginBottom: 15 }}>
+            <strong>{board.userId}</strong>
+          </span>
           <div>
-            작성자: {board.userId} {new Date(board.createdDate).toLocaleString()}
+            {new Date(board.createdDate).toLocaleString()}
+            {userId === board.userId ? (
+              <>
+                <FontAwesomeIcon
+                  style={{ marginLeft: 8, cursor: 'pointer' }}
+                  onClick={() => navigate(`/write/${board.id}`, { state: board })}
+                  icon={faPencil}
+                  size='lg'
+                />
+                <FontAwesomeIcon style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => onRemove(board.id)} icon={faTrashCan} size='lg' />
+              </>
+            ) : (
+              ''
+            )}
           </div>
-          <FontAwesomeIcon onClick={() => onRemove(board.id)} icon={faTrashCan} />
         </BoradHeader>
-        <div onClick={() => navigate(`/${board.id}`, { state: board })} style={{ height: '100%', backgroundColor: 'red' }} className='content-container'>
-          <div>내용: {board.content}</div>
-          <Thumbnail>
-            <img src={board.imageFile} alt='게시글 이미지' />
+        <div onClick={() => navigate(`/${board.id}`, { state: board })} style={{ height: '100%' }} className='content-container'>
+          <Thumbnail align={board.layout}>
+            {board.layout === 'left' ? (
+              <>
+                <img src={board.imageFile} alt='게시글 이미지' />
+                <Content>{board.content}</Content>
+              </>
+            ) : (
+              ''
+            )}
+            {board.layout === 'right' ? (
+              <>
+                <Content>내용: {board.content}</Content>
+                <img src={board.imageFile} alt='게시글 이미지' />
+              </>
+            ) : (
+              ''
+            )}
+            {board.layout === 'bottom' ? (
+              <>
+                <Content>내용: {board.content}</Content>
+                <img src={board.imageFile} alt='게시글 이미지' />
+              </>
+            ) : (
+              ''
+            )}
           </Thumbnail>
           <div>좋아요 {board.like}개</div>
         </div>
-      </div>
+      </Board>
     ));
   }
 
@@ -68,15 +106,30 @@ const Main = () => {
 const BoradHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  width: 300px;
+`;
+
+const Board = styled.div`
+  background-color: red;
+  width: 100%;
+  margin: 70px auto;
 `;
 
 const Thumbnail = styled.div`
-  width: 300px;
-  height: 300px;
-  img {
-    width: 100%;
+  display: flex;
+  flex-direction: ${props => (props.align === 'bottom' ? 'column' : 'flex-start')};
+  width: 100%;
+  div {
+    width: ${props => (props.align === 'bottom' ? '100%' : '50%')};
     height: 100%;
   }
+  img {
+    width: ${props => (props.align === 'bottom' ? '100%' : '50%')};
+    height: 100%;
+  }
+`;
+
+const Content = styled.p`
+  word-wrap: break-word;
+  width: 50%;
 `;
 export default Main;

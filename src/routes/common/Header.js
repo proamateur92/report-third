@@ -7,8 +7,13 @@ import styled from 'styled-components';
 
 const Header = ({ isLogin }) => {
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    signOut(auth);
+    navigate('/');
+  };
   return (
-    <div>
+    <Container>
       {isLogin ? (
         <Nav>
           <h1 onClick={() => navigate('/')}>Instagram</h1>
@@ -19,7 +24,7 @@ const Header = ({ isLogin }) => {
               <FontAwesomeIcon onClick={() => navigate('/notice')} icon={faPaperPlane} size='2x' />
             </div>
           </div>
-          <Button onClick={() => signOut(auth)}>로그아웃</Button>
+          <Button onClick={handleLogout}>로그아웃</Button>
         </Nav>
       ) : (
         <Nav>
@@ -30,9 +35,13 @@ const Header = ({ isLogin }) => {
           </div>
         </Nav>
       )}
-    </div>
+    </Container>
   );
 };
+
+const Container = styled.div`
+  background-color: blue;
+`;
 
 const Nav = styled.div`
   display: flex;

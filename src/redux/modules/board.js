@@ -27,7 +27,7 @@ export const loadBoardFB = () => {
 
 export const addBoardFB = newBoard => {
   return async function (dispatch) {
-    newBoard = { ...newBoard, author: 'user3', like: 0 };
+    newBoard = { ...newBoard, like: 0 };
     const docRef = await addDoc(collection(db, 'board'), newBoard);
     const boardData = { id: docRef.id, ...newBoard };
     dispatch(createBoard(boardData));
