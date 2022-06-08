@@ -23,6 +23,7 @@ const Main = () => {
       setUserId(user.email);
     } else {
       setIsLogin(false);
+      setUserId('');
     }
   };
 
@@ -43,19 +44,19 @@ const Main = () => {
       <Board key={board.id}>
         <BoradHeader>
           <span style={{ display: 'inline-block', fontSize: 20, marginBottom: 15 }}>
-            <strong>{board.userId}</strong>
+            <strong style={{ fontFamily: 'Robota', fontSize: '26px' }}>{board.userId}</strong>
           </span>
           <div>
-            {new Date(board.createdDate).toLocaleString()}
+            <span style={{ color: '#333', fontSize: '20px' }}>{new Date(board.createdDate).toLocaleString()}</span>
             {userId === board.userId ? (
               <>
                 <FontAwesomeIcon
-                  style={{ marginLeft: 8, cursor: 'pointer' }}
+                  style={{ marginLeft: 10, cursor: 'pointer' }}
                   onClick={() => navigate(`/write/${board.id}`, { state: board })}
                   icon={faPencil}
-                  size='lg'
+                  size='xl'
                 />
-                <FontAwesomeIcon style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => onRemove(board.id)} icon={faTrashCan} size='lg' />
+                <FontAwesomeIcon style={{ marginLeft: 10, cursor: 'pointer' }} onClick={() => onRemove(board.id)} icon={faTrashCan} size='xl' />
               </>
             ) : (
               ''
@@ -67,14 +68,14 @@ const Main = () => {
             {board.layout === 'left' ? (
               <>
                 <img src={board.imageFile} alt='게시글 이미지' />
-                <Content>{board.content}</Content>
+                <p>{board.content}</p>
               </>
             ) : (
               ''
             )}
             {board.layout === 'right' ? (
               <>
-                <Content>내용: {board.content}</Content>
+                <p>{board.content}</p>
                 <img src={board.imageFile} alt='게시글 이미지' />
               </>
             ) : (
@@ -82,14 +83,14 @@ const Main = () => {
             )}
             {board.layout === 'bottom' ? (
               <>
-                <Content>내용: {board.content}</Content>
+                <p>{board.content}</p>
                 <img src={board.imageFile} alt='게시글 이미지' />
               </>
             ) : (
               ''
             )}
           </Thumbnail>
-          <div>좋아요 {board.like}개</div>
+          <Like>좋아요 {board.like}개</Like>
         </div>
       </Board>
     ));
@@ -109,27 +110,29 @@ const BoradHeader = styled.div`
 `;
 
 const Board = styled.div`
-  background-color: red;
   width: 100%;
-  margin: 70px auto;
+  margin: 30px auto 80px;
 `;
 
 const Thumbnail = styled.div`
   display: flex;
   flex-direction: ${props => (props.align === 'bottom' ? 'column' : 'flex-start')};
   width: 100%;
-  div {
+  height: 50vh;
+  p {
     width: ${props => (props.align === 'bottom' ? '100%' : '50%')};
-    height: 100%;
+    word-wrap: break-word;
+    height: 70%;
   }
   img {
     width: ${props => (props.align === 'bottom' ? '100%' : '50%')};
-    height: 100%;
+    height: 70%;
+    border-radius: 15px;
   }
 `;
 
-const Content = styled.p`
-  word-wrap: break-word;
-  width: 50%;
+const Like = styled.div`
+  margin: 10px 0;
 `;
+
 export default Main;

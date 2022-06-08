@@ -1,5 +1,5 @@
 import { signOut } from 'firebase/auth';
-import { db, auth } from '../../firebase/firebase';
+import { auth } from '../../firebase/firebase';
 import { faSquarePlus, faHeart, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
@@ -16,22 +16,20 @@ const Header = ({ isLogin }) => {
     <Container>
       {isLogin ? (
         <Nav>
-          <h1 onClick={() => navigate('/')}>Instagram</h1>
+          <Title onClick={() => navigate('/')}>Instagram</Title>
           <div>
-            <div>
-              <FontAwesomeIcon onClick={() => navigate('/write')} icon={faSquarePlus} size='2x' />
-              <FontAwesomeIcon onClick={() => navigate('/like')} icon={faHeart} size='2x' />
-              <FontAwesomeIcon onClick={() => navigate('/notice')} icon={faPaperPlane} size='2x' />
-            </div>
+            <FontAwesomeIcon style={{ marginRight: 10, cursor: 'pointer' }} onClick={() => navigate('/write')} icon={faSquarePlus} size='2x' />
+            <FontAwesomeIcon style={{ marginRight: 10, cursor: 'pointer' }} onClick={() => navigate('/like')} icon={faHeart} size='2x' />
+            <FontAwesomeIcon style={{ marginRight: 10, cursor: 'pointer' }} onClick={() => navigate('/notice')} icon={faPaperPlane} size='2x' />
+            <Button onClick={handleLogout}>Logout</Button>
           </div>
-          <Button onClick={handleLogout}>로그아웃</Button>
         </Nav>
       ) : (
         <Nav>
-          <h1 onClick={() => navigate('/')}>Instagram</h1>
+          <Title onClick={() => navigate('/')}>Instagram</Title>
           <div>
-            <Button onClick={() => navigate('/login')}>로그인</Button>
-            <Button onClick={() => navigate('/signup')}>회원가입</Button>
+            <Button onClick={() => navigate('/login')}>Login</Button>
+            <Button onClick={() => navigate('/signup')}>SignUp</Button>
           </div>
         </Nav>
       )}
@@ -40,7 +38,12 @@ const Header = ({ isLogin }) => {
 };
 
 const Container = styled.div`
-  background-color: blue;
+  font-family: 'insta';
+`;
+
+const Title = styled.h1`
+  font-size: 60px;
+  cursor: pointer;
 `;
 
 const Nav = styled.div`
@@ -50,14 +53,19 @@ const Nav = styled.div`
 `;
 
 const Button = styled.button`
-  padding: 5px;
+  padding: 15px;
   border: none;
   color: white;
   border-radius: 5px;
   background-color: #65b5f8;
   cursor: pointer;
   margin-right: 5px;
-  font-size: 18px;
+  font-size: 30px;
+  font-family: 'insta';
+  transition: 0.4s;
+  &:hover {
+    background-color: #3ca3fa;
+  }
 `;
 
 export default Header;

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { onAuthStateChanged } from 'firebase/auth';
-import { db, auth, storage } from '../firebase/firebase';
-import { doc, getDoc, addDoc, updateDoc } from 'firebase/firestore';
+import { auth, storage } from '../firebase/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { addBoardFB, updateBoardFB } from '../redux/modules/board';
 import Header from './common/Header';
@@ -21,24 +20,34 @@ const Write = () => {
   const [thumbnail, setThumbNail] = useState('');
 
   const { id } = useParams();
+  const boards = useSelector(state => state.board.list);
+  const result = boards.filter(board => board.id === id);
 
   // 로그인 여부 파악
-  const loginCheck = async user => {
+  const loginCheck = user => {
     if (user) {
       setIsLogin(true);
       // 로그인 정보가 존재하므로 firestore인증 정보의 이메일을
       // userId값으로 넣어준다
       setData({ ...data, userId: user.email });
-    } else {
-      // 로그인 정보가 존재하지 않으면 메인 페이지로 강제 이동
-      alert('잘못된 접근입니다.');
-      navigate('/');
     }
   };
 
   useEffect(() => {
     onAuthStateChanged(auth, loginCheck);
   }, []);
+
+  useEffect(() => {
+    if (!id) {
+      setMode(true);
+      setThumbNail('');
+      setData(prev => ({ userId: prev.userId, content: '', imageFile: '', createdDate: '', layout: '', like: 0 }));
+    } else {
+      if (result.length === 0) {
+        navigate('/');
+      }
+    }
+  }, [id]);
 
   // 수정 모드일 때 데이터 data에 담아놓기
   if (mode && location.state) {
@@ -48,19 +57,16 @@ const Write = () => {
     setThumbNail(board.imageFile);
   }
 
-  // data값의 변경이 감지되면 validation 함수 실행
+  // data값의 변경이 감지되면 글작성 요소의 공백이 없는지 validation 체크
   useEffect(() => {
-    validCheck();
-  }, [data]);
-
-  const validCheck = () => {
     if (data.layout !== '' && data.content !== '' && data.imageFile !== '') {
       setIsValid(true);
       return;
     }
     setIsValid(false);
-  };
+  }, [data]);
 
+  // 각 요소들의 값이 변경되면 data값을 set
   const handleData = e => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
@@ -97,8 +103,6 @@ const Write = () => {
       dispatch(addBoardFB({ ...data, createdDate }));
     } else {
       // 글 수정일 때
-      console.log(data);
-      console.log('수정!!');
       dispatch(updateBoardFB(id, { ...data, createdDate }));
     }
 
@@ -106,6 +110,7 @@ const Write = () => {
     navigate('/');
   };
 
+  // 이미지 업로드 로직
   const handleImage = async e => {
     const imageFile = e.target.files[0];
     const storageRef = ref(storage, `images/${imageFile.name}`);
@@ -126,62 +131,56 @@ const Write = () => {
   const handleLayout = event => {
     setData(prev => ({ ...prev, layout: event.target.value }));
   };
-
-  console.log(data);
   return (
-    <Container>
+    <>
       <Header isLogin={isLogin} />
-      <WriteFrom onSubmit={handleWrite}>
-        <h1>{mode ? '게시글 작성' : '게시글 수정'}</h1>
-        <input name='imageFile' onChange={handleImage} type='file' />
-        <Layout>
-          <Guide>
-            <input checked={data.layout === 'right' ? true : false} value='right' id='right' onChange={handleLayout} name='layout' type='radio' />
-            <label htmlFor='right'>오른쪽에 이미지 왼쪽에 텍스트</label>
-          </Guide>
-          <Contents align='right'>
-            <Text align='right'>{mode ? data.content : data.content}</Text>
-            <Thumbnail align='right'>
-              <img src={thumbnail ? thumbnail : 'https://pic.onlinewebfonts.com/svg/img_328197.png'} alt='커버이미지' />
-            </Thumbnail>
-          </Contents>
-        </Layout>
-        <Layout>
-          <Guide>
-            <input checked={data.layout === 'left' ? true : false} value='left' id='left' onChange={handleLayout} name='layout' type='radio' />
-            <label htmlFor='left'>왼쪽에 이미지 오른쪽에 텍스트</label>
-          </Guide>
-          <Contents align='left'>
-            <Thumbnail>
-              <img src={thumbnail ? thumbnail : 'https://pic.onlinewebfonts.com/svg/img_328197.png'} alt='커버이미지' />
-            </Thumbnail>
-            <Text name='left' align='left'>
-              {data.content}
-            </Text>
-          </Contents>
-        </Layout>
-        <Layout align='bottom'>
-          <Guide>
-            <input checked={data.layout === 'bottom' ? true : false} value='bottom' id='bottom' onChange={handleLayout} name='layout' type='radio' />
-            <label htmlFor='bottom'>하단에 이미지 상단에 텍스트</label>
-          </Guide>
-          <Contents align='bottom'>
-            <Text align='bottom'>{data.content}</Text>
-            <Thumbnail>
-              <img src={thumbnail ? thumbnail : 'https://pic.onlinewebfonts.com/svg/img_328197.png'} alt='커버이미지' />
-            </Thumbnail>
-          </Contents>
-        </Layout>
-        <Content name='content' value={data.content} onChange={handleData}></Content>
-        <SubmitButton block={isValid}>{mode ? '글 작성하기' : '글 수정하기'}</SubmitButton>
-      </WriteFrom>
-    </Container>
+      {isLogin ? (
+        <>
+          <WriteFrom onSubmit={handleWrite}>
+            <span style={{ fontSize: '36px', fontWeight: 'bold', fontFamily: 'insta' }}>{mode ? 'Write' : 'Edit'}</span>
+            <input style={{ margin: '20px 0' }} name='imageFile' onChange={handleImage} type='file' />
+            <Layout>
+              <Guide>
+                <input checked={data.layout === 'right' ? true : false} value='right' id='right' onChange={handleLayout} name='layout' type='radio' />
+                <label htmlFor='right'>오른쪽에 이미지 왼쪽에 텍스트</label>
+              </Guide>
+              <Thumbnail layout='right'>
+                <p layout='right'>{data.content}</p>
+                <img layout='right' src={thumbnail ? thumbnail : 'https://pic.onlinewebfonts.com/svg/img_328197.png'} alt='커버이미지' />
+              </Thumbnail>
+            </Layout>
+            <Layout>
+              <Guide>
+                <input checked={data.layout === 'left' ? true : false} value='left' id='left' onChange={handleLayout} name='layout' type='radio' />
+                <label htmlFor='left'>왼쪽에 이미지 오른쪽에 텍스트</label>
+              </Guide>
+              <Thumbnail layout='left'>
+                <img layout='left' src={thumbnail ? thumbnail : 'https://pic.onlinewebfonts.com/svg/img_328197.png'} alt='커버이미지' />
+                <p layout='left'>{data.content}</p>
+              </Thumbnail>
+            </Layout>
+            <Layout layout='bottom'>
+              <Guide>
+                <input checked={data.layout === 'bottom' ? true : false} value='bottom' id='bottom' onChange={handleLayout} name='layout' type='radio' />
+                <label htmlFor='bottom'>하단에 이미지 상단에 텍스트</label>
+              </Guide>
+              <Thumbnail layout='bottom'>
+                <p layout='bottom'>{data.content}</p>
+                <img layout='bottom' src={thumbnail ? thumbnail : 'https://pic.onlinewebfonts.com/svg/img_328197.png'} alt='커버이미지' />
+              </Thumbnail>
+            </Layout>
+            <Content name='content' value={data.content} onChange={handleData}></Content>
+            <SubmitButton block={isValid}>{mode ? '글 작성하기' : '글 수정하기'}</SubmitButton>
+          </WriteFrom>
+        </>
+      ) : (
+        <>
+          <h1>로그인 후 글쓰기가 가능합니다!</h1>
+        </>
+      )}
+    </>
   );
 };
-
-const Container = styled.div`
-  background-color: red;
-`;
 
 const WriteFrom = styled.form`
   display: flex;
@@ -190,7 +189,6 @@ const WriteFrom = styled.form`
 `;
 
 const Layout = styled.div`
-  background-color: blue;
   width: 100%;
   max-width: 800px;
   display: flex;
@@ -203,46 +201,41 @@ const Layout = styled.div`
 `;
 
 const Content = styled.textarea`
-  width: 90%;
-  height: 100px;
-  margin: 30px 0;
-`;
-
-const Contents = styled.div`
-  display: flex;
-  flex-direction: ${props => (props.align === 'bottom' ? 'column' : '')};
-  justify-content: ${props => (props.align === 'bottom' ? '' : 'space-between')};
-  align-items: ${props => (props.align === 'bottom' ? 'center' : '')};
-`;
-
-const Text = styled.p`
-  width: ${props => (props.align === 'bottom' ? '100%' : '50%')};
-  /* height: ${props => (props.align === 'bottom' ? '100px' : '150px')}; */
-  word-wrap: break-word;
+  width: 100%;
+  height: 130px;
+  margin: 50px 0;
 `;
 
 const Guide = styled.span``;
 
 const Thumbnail = styled.div`
-  width: 300px;
-  height: 300px;
+  display: flex;
+  flex-direction: ${props => (props.layout === 'bottom' ? 'column' : 'flex-start')};
+  width: 100%;
+  height: 50vh;
+  p {
+    width: ${props => (props.layout === 'bottom' ? '100%' : '50%')};
+    word-wrap: break-word;
+    height: 70%;
+  }
   img {
-    width: 100%;
-    height: 100%;
+    width: ${props => (props.layout === 'bottom' ? '100%' : '50%')};
+    height: 70%;
+    border-radius: 15px;
   }
 `;
 
 const SubmitButton = styled.button`
   background-color: ${props => (props.block ? '#65b5f8' : '#97cefc')};
   color: #fff;
+  padding: 15px;
+  width: 100%;
+  margin-bottom: 30px;
   outline: none;
   border: none;
   font-size: 24px;
   border-radius: 5px;
   box-sizing: border-box;
-  padding: 10px;
-  width: 90%;
-  margin-bottom: 30px;
   cursor: ${props => (props.block ? 'pointer' : 'not-allowed')};
 `;
 

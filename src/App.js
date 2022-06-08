@@ -16,13 +16,13 @@ function App() {
 }
 
 const Box = styled.div`
-  width: 800px;
-  margin: auto;
+  width: 100%;
 `;
 
 const Container = styled.div`
   display: flex;
+  margin: auto;
   flex-direction: column;
-  background-color: yellow;
+  width: 700px;
 `;
 export default App;
